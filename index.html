@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Daily Tracker Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #0f172a; color: white; -webkit-tap-highlight-color: transparent; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .btn-state-0 { background: #334155; color: #94a3b8; } /* Unknown */
+        .btn-state-1 { background: #10b981; color: white; } /* Taken */
+        .btn-state-2 { background: #ef4444; color: white; } /* Skipped */
+    </style>
+</head>
+<body class="p-4 pb-24 font-sans">
+
+    <!-- Header & Dashboard -->
+    <div class="glass rounded-2xl p-4 mb-4 shadow-lg">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-xl font-bold">Tracker Pro</h1>
+            <div class="flex gap-3">
+                <button onclick="openSettings()" class="bg-blue-600 p-2 rounded-full w-10 h-10 flex items-center justify-center"><i class="fas fa-cog"></i></button>
+            </div>
+        </div>
+        <input type="date" id="datePicker" class="w-full bg-slate-800 text-white p-2 rounded-lg mb-4 border border-slate-700">
+        
+        <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
+                <div class="text-xs text-slate-400 font-semibold mb-1">TODAY</div>
+                <div class="text-lg font-bold" id="dashToday">₹0</div>
+            </div>
+            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
+                <div class="text-xs text-slate-400 font-semibold mb-1">MONTH</div>
+                <div class="text-lg font-bold text-blue-400" id="dashMonth">₹0</div>
+            </div>
+            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
+                <div class="text-xs text-slate-400 font-semibold mb-1">YEAR</div>
+                <div class="text-lg font-bold text-emerald-400" id="dashYear">₹0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items Grid -->
+    <div id="itemsGrid" class="grid grid-cols-2 gap-3">
+        <!-- Rendered via JS -->
+    </div>
+
+    <!-- History Modal -->
+    <div id="historyModal" class="fixed inset-0 bg-black/80 hidden z-50 flex-col items-center justify-end">
+        <div class="glass w-full rounded-t-3xl p-5 max-h-[85vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="modalTitle" class="text-xl font-bold">History</h2>
+                <button onclick="closeModal('historyModal')" class="bg-slate-700 w-8 h-8 rounded-full"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="flex gap-2 mb-4 bg-slate-800 p-1 rounded-lg">
+                <button onclick="setHistoryTab('month')" id="tabMonth" class="flex-1 py-1 rounded-md bg-blue-600 text-sm font-bold">Month</button>
+                <button onclick="setHistoryTab('year')" id="tabYear" class="flex-1 py-1 rounded-md text-slate-400 text-sm font-bold">Year</button>
+            </div>
+            <div id="historyList" class="space-y-2">
+                <!-- Records go here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
+        <div class="glass w-full max-w-sm rounded-3xl p-6 relative">
+            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold mb-6"><i class="fas fa-shield-alt text-blue-400 mr-2"></i>Backup & Restore</h2>
+            <button onclick="downloadBackup()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl mb-4"><i class="fas fa-download mr-2"></i> Download Backup</button>
+            <div class="relative w-full h-12 bg-slate-700 rounded-xl flex items-center justify-center font-bold text-slate-300 overflow-hidden">
+                <input type="file" id="restoreFile" accept=".json" onchange="restoreBackup(event)" class="absolute inset-0 opacity-0 cursor-pointer">
+                <i class="fas fa-upload mr-2"></i> Restore Data
+            </div>
+            <p class="text-xs text-slate-400 mt-4 text-center">Restore from a previously downloaded .json file.</p>
+        </div>
+    </div>
+
+    <script>
+        let items = [
+            { id: 1, name: 'Mess Tiffin', price: 60, qty: 1, unit: 'Tiffin', icon: 'fa-utensils', color: 'text-orange-400' },
+            { id: 2, name: 'Milk', price: 60, qty: 0.5, unit: 'L', icon: 'fa-glass-water', color: 'text-blue-200' },
+            { id: 3, name: 'Petrol', price: 103, qty: 1, unit: 'L', icon: 'fa-gas-pump', color: 'text-indigo-400' },
+            { id: 4, name: 'Bananas', price: 40, qty: 1, unit: 'Dzn', icon: 'fa-apple-whole', color: 'text-yellow-400' },
+            { id: 5, name: 'Water Jar', price: 20, qty: 1, unit: 'Jar', icon: 'fa-bottle-water', color: 'text-cyan-400' }
+        ];
+        
+        let records = JSON.parse(localStorage.getItem('tracker_records')) || {};
+        let currentDate = new Date().toISOString().split('T')[0];
+        let currentHistoryItem = null;
+        let historyTab = 'month';
+
+        document.getElementById('datePicker').value = currentDate;
+        document.getElementById('datePicker').addEventListener('change', (e) => {
+            currentDate = e.target.value;
+            renderApp();
+        });
+
+        function renderApp() {
+            calculateDashboards();
+            const grid = document.getElementById('itemsGrid');
+            grid.innerHTML = '';
+            
+            items.forEach(item => {
+                const dayRecord = records[currentDate]?.[item.id] || { state: 0 };
+                let stateClass = `btn-state-${dayRecord.state}`;
+                let iconClass = dayRecord.state === 1 ? 'fa-check' : (dayRecord.state === 2 ? 'fa-times' : 'fa-minus');
+
+                grid.innerHTML += `
+                    <div class="glass p-3 rounded-2xl relative">
+                        <div class="text-xs text-slate-400 absolute top-3 right-3 bg-slate-800 px-2 py-0.5 rounded-md font-bold">${item.qty} ${item.unit}</div>
+                        <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center mb-2" onclick="openHistory(${item.id})">
+                            <i class="fas ${item.icon} text-lg ${item.color}"></i>
+                        </div>
+                        <h3 class="font-bold text-sm mb-1 leading-tight" onclick="openHistory(${item.id})">${item.name}</h3>
+                        <div class="text-xs text-slate-400 mb-3 font-semibold">₹${item.price} / ${item.unit}</div>
+                        <button onclick="toggleState(${item.id})" class="w-full py-2 rounded-xl transition-colors duration-200 ${stateClass} flex justify-center items-center font-bold">
+                            <i class="fas ${iconClass}"></i>
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function toggleState(itemId) {
+            if (!records[currentDate]) records[currentDate] = {};
+            const item = items.find(i => i.id === itemId);
+            let current = records[currentDate][itemId]?.state || 0;
+            let next = (current + 1) % 3; // 0 -> 1 -> 2 -> 0
+            
+            if (next === 0) {
+                delete records[currentDate][itemId];
+            } else {
+                records[currentDate][itemId] = { state: next, price: item.price, qty: item.qty };
+            }
+            saveData();
+            renderApp();
+        }
+
+        function calculateDashboards() {
+            let t = 0, m = 0, y = 0;
+            const [cYear, cMonth] = currentDate.split('-');
+            
+            for (const [date, dayData] of Object.entries(records)) {
+                let dayTotal = 0;
+                for (const itemId in dayData) {
+                    if (dayData[itemId].state === 1) {
+                        dayTotal += dayData[itemId].price * dayData[itemId].qty;
+                    }
+                }
+                if (date === currentDate) t += dayTotal;
+                if (date.startsWith(`${cYear}-${cMonth}`)) m += dayTotal;
+                if (date.startsWith(cYear)) y += dayTotal;
+            }
+            
+            document.getElementById('dashToday').innerText = `₹${t}`;
+            document.getElementById('dashMonth').innerText = `₹${m}`;
+            document.getElementById('dashYear').innerText = `₹${y}`;
+        }
+
+        function openHistory(itemId) {
+            currentHistoryItem = items.find(i => i.id === itemId);
+            document.getElementById('modalTitle').innerText = currentHistoryItem.name + ' History';
+            document.getElementById('historyModal').classList.remove('hidden');
+            document.getElementById('historyModal').classList.add('flex');
+            setHistoryTab('month');
+        }
+
+        function setHistoryTab(tab) {
+            historyTab = tab;
+            document.getElementById('tabMonth').className = `flex-1 py-1 rounded-md text-sm font-bold ${tab === 'month' ? 'bg-blue-600 text-white' : 'text-slate-400'}`;
+            document.getElementById('tabYear').className = `flex-1 py-1 rounded-md text-sm font-bold ${tab === 'year' ? 'bg-blue-600 text-white' : 'text-slate-400'}`;
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            
+            const [cYear, cMonth] = currentDate.split('-');
+            const prefix = tab === 'month' ? `${cYear}-${cMonth}` : `${cYear}`;
+            
+            let html = '';
+            // Generate list from records
+            Object.keys(records).sort().reverse().forEach(date => {
+                if (date.startsWith(prefix)) {
+                    const data = records[date][currentHistoryItem.id];
+                    if (data && data.state !== 0) {
+                        let isTaken = data.state === 1;
+                        html += `
+                            <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${isTaken ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">
+                                        <i class="fas ${isTaken ? 'fa-check' : 'fa-times'}"></i>
+                                    </div>
+                                    <div class="font-bold text-sm">${new Date(date).toLocaleDateString('en-GB', {day:'numeric', month:'short'})}</div>
+                                </div>
+                                <div class="text-right">
+                                    ${isTaken ? `<div class="font-bold text-sm">₹${data.price * data.qty}</div>
+                                    <div class="text-xs text-slate-400">${data.qty} ${currentHistoryItem.unit} @ ₹${data.price}</div>` : 
+                                    `<div class="text-xs text-red-400 font-bold">Skipped</div>`}
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            });
+            
+            if (!html) html = '<div class="text-center text-slate-500 py-4">No records found.</div>';
+            list.innerHTML = html;
+        }
+
+        function openSettings() {
+            document.getElementById('settingsModal').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            if (id === 'historyModal') document.getElementById('historyModal').classList.remove('flex');
+        }
+
+        function saveData() {
+            localStorage.setItem('tracker_records', JSON.stringify(records));
+        }
+
+        function downloadBackup() {
+            const data = JSON.stringify({ items, records });
+            const blob = new Blob([data], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Tracker_Backup_${currentDate}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function restoreBackup(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (data.records) {
+                            records = data.records;
+                            saveData();
+                            renderApp();
+                            closeModal('settingsModal');
+                            alert("Data Restored Successfully!");
+                        }
+                    } catch (err) {
+                        alert("Invalid Backup File");
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Init
+        renderApp();
+    </script>
+</body>
+              </html>
+  
