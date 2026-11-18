@@ -3,261 +3,275 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Daily Tracker Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        body { background-color: #0f172a; color: white; -webkit-tap-highlight-color: transparent; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .btn-state-0 { background: #334155; color: #94a3b8; } /* Unknown */
-        .btn-state-1 { background: #10b981; color: white; } /* Taken */
-        .btn-state-2 { background: #ef4444; color: white; } /* Skipped */
+        body { background-color: #0b1120; color: #f8fafc; -webkit-tap-highlight-color: transparent; font-family: system-ui, -apple-system, sans-serif; }
+        .card { background: #131c31; border: 1px solid rgba(255,255,255,0.07); }
+        .glass { background: rgba(19, 28, 49, 0.96); backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.09); }
+        .state-0 { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
+        .state-1 { background: #059669; color: #ffffff; border: 1px solid #10b981; }
+        .state-2 { background: #dc2626; color: #ffffff; border: 1px solid #ef4444; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.7; }
     </style>
 </head>
-<body class="p-4 pb-24 font-sans">
+<body class="pb-24 select-none">
 
-    <!-- Header & Dashboard -->
-    <div class="glass rounded-2xl p-4 mb-4 shadow-lg">
-        <div class="flex justify-between items-center mb-4">
-            <h1 class="text-xl font-bold">Tracker Pro</h1>
-            <div class="flex gap-3">
-                <button onclick="openSettings()" class="bg-blue-600 p-2 rounded-full w-10 h-10 flex items-center justify-center"><i class="fas fa-cog"></i></button>
+    <!-- Top Dashboard -->
+    <div class="sticky top-0 z-30 bg-[#0b1120]/95 backdrop-blur-md border-b border-slate-800/80 px-3 pt-3 pb-2.5">
+        <div class="max-w-md mx-auto">
+            <div class="flex items-center justify-between mb-2.5">
+                <div>
+                    <h1 class="text-base font-bold tracking-tight text-white leading-none">Daily Tracker Pro</h1>
+                    <p id="headerSubtitle" class="text-[11px] text-slate-400 mt-0.5">Personal Expense & Habit Log</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button onclick="openDailySummary()" title="Daily Report" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 flex items-center justify-center border border-slate-700">
+                        <i class="fas fa-calendar-day text-xs"></i>
+                    </button>
+                    <button onclick="downloadCSV()" title="Export CSV" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 flex items-center justify-center border border-slate-700">
+                        <i class="fas fa-file-csv text-xs"></i>
+                    </button>
+                    <button onclick="openSettings()" title="Settings & Backup" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center border border-slate-700">
+                        <i class="fas fa-cog text-xs"></i>
+                    </button>
+                </div>
             </div>
-        </div>
-        <input type="date" id="datePicker" class="w-full bg-slate-800 text-white p-2 rounded-lg mb-4 border border-slate-700">
-        
-        <div class="grid grid-cols-3 gap-2 text-center">
-            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
-                <div class="text-xs text-slate-400 font-semibold mb-1">TODAY</div>
-                <div class="text-lg font-bold" id="dashToday">₹0</div>
+
+            <!-- Date Picker + Quick Nav -->
+            <div class="flex items-center gap-1.5 mb-2.5">
+                <button onclick="shiftDate(-1)" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center border border-slate-700 active:scale-95">
+                    <i class="fas fa-chevron-left text-xs"></i>
+                </button>
+                <input type="date" id="datePicker" class="flex-1 bg-slate-800/90 text-white text-xs font-semibold px-2.5 h-8 rounded-lg border border-slate-700 outline-none">
+                <button onclick="shiftDate(1)" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center border border-slate-700 active:scale-95">
+                    <i class="fas fa-chevron-right text-xs"></i>
+                </button>
+                <button onclick="goToday()" class="px-2.5 h-8 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[11px] font-bold active:scale-95">
+                    Today
+                </button>
             </div>
-            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
-                <div class="text-xs text-slate-400 font-semibold mb-1">MONTH</div>
-                <div class="text-lg font-bold text-blue-400" id="dashMonth">₹0</div>
-            </div>
-            <div class="bg-slate-800 p-2 rounded-xl border border-slate-700">
-                <div class="text-xs text-slate-400 font-semibold mb-1">YEAR</div>
-                <div class="text-lg font-bold text-emerald-400" id="dashYear">₹0</div>
+
+            <!-- 3 Summary Boxes -->
+            <div class="grid grid-cols-3 gap-2 text-center">
+                <div onclick="openDailySummary()" class="bg-slate-800/80 rounded-xl py-1.5 px-2 border border-slate-700/70 cursor-pointer active:scale-95">
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wider">DAY</div>
+                    <div class="text-sm font-bold text-white" id="dashToday">₹0</div>
+                </div>
+                <div class="bg-slate-800/80 rounded-xl py-1.5 px-2 border border-slate-700/70">
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wider">MONTH</div>
+                    <div class="text-sm font-bold text-blue-400" id="dashMonth">₹0</div>
+                </div>
+                <div class="bg-slate-800/80 rounded-xl py-1.5 px-2 border border-slate-700/70">
+                    <div class="text-[10px] text-slate-400 font-semibold tracking-wider">YEAR</div>
+                    <div class="text-sm font-bold text-emerald-400" id="dashYear">₹0</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Items Grid -->
-    <div id="itemsGrid" class="grid grid-cols-2 gap-3">
-        <!-- Rendered via JS -->
-    </div>
+    <!-- Search & Categories -->
+    <div class="max-w-md mx-auto px-3 pt-2.5">
+        <div class="relative mb-2">
+            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+            <input type="text" id="searchInput" oninput="renderItems()" placeholder="Search milk, petrol, mess, jio..." class="w-full bg-slate-800/70 text-white text-xs pl-8 pr-8 py-2 rounded-xl border border-slate-700/80 outline-none focus:border-blue-500">
+            <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"><i class="fas fa-times-circle"></i></button>
+        </div>
 
-    <!-- History Modal -->
-    <div id="historyModal" class="fixed inset-0 bg-black/80 hidden z-50 flex-col items-center justify-end">
-        <div class="glass w-full rounded-t-3xl p-5 max-h-[85vh] overflow-y-auto">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="modalTitle" class="text-xl font-bold">History</h2>
-                <button onclick="closeModal('historyModal')" class="bg-slate-700 w-8 h-8 rounded-full"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="flex gap-2 mb-4 bg-slate-800 p-1 rounded-lg">
-                <button onclick="setHistoryTab('month')" id="tabMonth" class="flex-1 py-1 rounded-md bg-blue-600 text-sm font-bold">Month</button>
-                <button onclick="setHistoryTab('year')" id="tabYear" class="flex-1 py-1 rounded-md text-slate-400 text-sm font-bold">Year</button>
-            </div>
-            <div id="historyList" class="space-y-2">
-                <!-- Records go here -->
-            </div>
+        <div id="categoryTabs" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2.5">
+            <!-- Rendered via JS -->
+        </div>
+
+        <!-- Compact 2-Column Items Grid -->
+        <div id="itemsGrid" class="grid grid-cols-2 gap-2.5">
+            <!-- Rendered via JS -->
         </div>
     </div>
 
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="fixed inset-0 bg-black/80 hidden z-50 flex items-center justify-center p-4">
-        <div class="glass w-full max-w-sm rounded-3xl p-6 relative">
-            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400"><i class="fas fa-times text-xl"></i></button>
-            <h2 class="text-xl font-bold mb-6"><i class="fas fa-shield-alt text-blue-400 mr-2"></i>Backup & Restore</h2>
-            <button onclick="downloadBackup()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl mb-4"><i class="fas fa-download mr-2"></i> Download Backup</button>
-            <div class="relative w-full h-12 bg-slate-700 rounded-xl flex items-center justify-center font-bold text-slate-300 overflow-hidden">
-                <input type="file" id="restoreFile" accept=".json" onchange="restoreBackup(event)" class="absolute inset-0 opacity-0 cursor-pointer">
-                <i class="fas fa-upload mr-2"></i> Restore Data
-            </div>
-            <p class="text-xs text-slate-400 mt-4 text-center">Restore from a previously downloaded .json file.</p>
-        </div>
-    </div>
+    <!-- Floating Add Button -->
+    <button onclick="openItemForm()" class="fixed bottom-5 right-5 z-30 w-12 h-12 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50 flex items-center justify-center text-lg active:scale-95 transition">
+        <i class="fas fa-plus"></i>
+    </button>
 
-    <script>
-        let items = [
-            { id: 1, name: 'Mess Tiffin', price: 60, qty: 1, unit: 'Tiffin', icon: 'fa-utensils', color: 'text-orange-400' },
-            { id: 2, name: 'Milk', price: 60, qty: 0.5, unit: 'L', icon: 'fa-glass-water', color: 'text-blue-200' },
-            { id: 3, name: 'Petrol', price: 103, qty: 1, unit: 'L', icon: 'fa-gas-pump', color: 'text-indigo-400' },
-            { id: 4, name: 'Bananas', price: 40, qty: 1, unit: 'Dzn', icon: 'fa-apple-whole', color: 'text-yellow-400' },
-            { id: 5, name: 'Water Jar', price: 20, qty: 1, unit: 'Jar', icon: 'fa-bottle-water', color: 'text-cyan-400' }
-        ];
-        
-        let records = JSON.parse(localStorage.getItem('tracker_records')) || {};
-        let currentDate = new Date().toISOString().split('T')[0];
-        let currentHistoryItem = null;
-        let historyTab = 'month';
-
-        document.getElementById('datePicker').value = currentDate;
-        document.getElementById('datePicker').addEventListener('change', (e) => {
-            currentDate = e.target.value;
-            renderApp();
-        });
-
-        function renderApp() {
-            calculateDashboards();
-            const grid = document.getElementById('itemsGrid');
-            grid.innerHTML = '';
-            
-            items.forEach(item => {
-                const dayRecord = records[currentDate]?.[item.id] || { state: 0 };
-                let stateClass = `btn-state-${dayRecord.state}`;
-                let iconClass = dayRecord.state === 1 ? 'fa-check' : (dayRecord.state === 2 ? 'fa-times' : 'fa-minus');
-
-                grid.innerHTML += `
-                    <div class="glass p-3 rounded-2xl relative">
-                        <div class="text-xs text-slate-400 absolute top-3 right-3 bg-slate-800 px-2 py-0.5 rounded-md font-bold">${item.qty} ${item.unit}</div>
-                        <div class="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center mb-2" onclick="openHistory(${item.id})">
-                            <i class="fas ${item.icon} text-lg ${item.color}"></i>
-                        </div>
-                        <h3 class="font-bold text-sm mb-1 leading-tight" onclick="openHistory(${item.id})">${item.name}</h3>
-                        <div class="text-xs text-slate-400 mb-3 font-semibold">₹${item.price} / ${item.unit}</div>
-                        <button onclick="toggleState(${item.id})" class="w-full py-2 rounded-xl transition-colors duration-200 ${stateClass} flex justify-center items-center font-bold">
-                            <i class="fas ${iconClass}"></i>
-                        </button>
+    <!-- Item Detail / Calendar / History Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/80 hidden z-50 items-end justify-center">
+        <div class="glass w-full max-w-md rounded-t-3xl max-h-[92vh] flex flex-col overflow-hidden">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <div id="detailIconBox" class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0"></div>
+                    <div class="min-w-0">
+                        <h2 id="detailName" class="text-sm font-bold text-white truncate">Item</h2>
+                        <p id="detailSub" class="text-[11px] text-slate-400 truncate">Category</p>
                     </div>
-                `;
-            });
-        }
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                    <button onclick="editCurrentItem()" class="w-8 h-8 rounded-lg bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700" title="Edit Item"><i class="fas fa-pen text-xs"></i></button>
+                    <button onclick="downloadCSV(currentDetailId)" class="w-8 h-8 rounded-lg bg-slate-800 text-emerald-400 flex items-center justify-center border border-slate-700" title="Item CSV"><i class="fas fa-download text-xs"></i></button>
+                    <button onclick="closeModal('detailModal')" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center border border-slate-700"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
 
-        function toggleState(itemId) {
-            if (!records[currentDate]) records[currentDate] = {};
-            const item = items.find(i => i.id === itemId);
-            let current = records[currentDate][itemId]?.state || 0;
-            let next = (current + 1) % 3; // 0 -> 1 -> 2 -> 0
+            <!-- Modal Body -->
+            <div class="overflow-y-auto px-3.5 py-3 space-y-3">
+                <!-- Month & Year Item Stats -->
+                <div class="grid grid-cols-2 gap-2">
+                    <div class="bg-slate-800/70 rounded-xl p-2.5 border border-slate-700/60">
+                        <div class="text-[10px] text-slate-400 font-semibold uppercase" id="statMonthLabel">This Month</div>
+                        <div class="flex items-baseline justify-between mt-0.5">
+                            <span id="statMonthAmt" class="text-sm font-bold text-blue-400">₹0</span>
+                            <span id="statMonthQty" class="text-[11px] font-semibold text-slate-300">0</span>
+                        </div>
+                    </div>
+                    <div class="bg-slate-800/70 rounded-xl p-2.5 border border-slate-700/60">
+                        <div class="text-[10px] text-slate-400 font-semibold uppercase" id="statYearLabel">This Year</div>
+                        <div class="flex items-baseline justify-between mt-0.5">
+                            <span id="statYearAmt" class="text-sm font-bold text-emerald-400">₹0</span>
+                            <span id="statYearQty" class="text-[11px] font-semibold text-slate-300">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Calendar -->
+                <div class="bg-slate-900/70 rounded-2xl p-2.5 border border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <button onclick="changeCalMonth(-1)" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center"><i class="fas fa-chevron-left text-[11px]"></i></button>
+                        <div id="calMonthTitle" class="text-xs font-bold text-white">November 2026</div>
+                        <button onclick="changeCalMonth(1)" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center"><i class="fas fa-chevron-right text-[11px]"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-400 font-semibold mb-1">
+                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                    </div>
+                    <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
+                    <p class="text-[10px] text-slate-500 text-center mt-1.5">Tap any date: Green (Taken) → Red (Skipped) → Blank (Unknown)</p>
+                </div>
+
+                <!-- Manual Entry & Dynamic Price Update -->
+                <div class="bg-slate-900/70 rounded-2xl p-3 border border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-bold text-slate-200"><i class="fas fa-sliders-h text-blue-400 mr-1.5"></i>Custom Entry / Rate Update</h3>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-0.5">Date</label>
+                            <input type="date" id="manDate" class="w-full bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-0.5">Status</label>
+                            <select id="manState" class="w-full bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 outline-none">
+                                <option value="1">✓ Taken</option>
+                                <option value="2">✕ Skipped</option>
+                                <option value="0">— Clear / Unknown</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-0.5" id="manPriceLabel">Rate (₹)</label>
+                            <input type="number" step="any" id="manPrice" class="w-full bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-slate-400 block mb-0.5" id="manQtyLabel">Quantity</label>
+                            <input type="number" step="any" id="manQty" class="w-full bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 outline-none">
+                        </div>
+                    </div>
+                    <input type="text" id="manNote" placeholder="Payment / Note (optional, e.g. Paid UPI)" class="w-full bg-slate-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 outline-none mb-2">
+                    <label class="flex items-center gap-2 text-[11px] text-slate-300 mb-2.5 cursor-pointer">
+                        <input type="checkbox" id="manUpdateDefault" class="rounded bg-slate-800 border-slate-600 accent-blue-500">
+                        <span>Save this rate as new default for future</span>
+                    </label>
+                    <button onclick="saveManualEntry()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-xl active:scale-98">
+                        Save Entry
+                    </button>
+                </div>
+
+                <!-- Dense History List (Month & Year + Filters) -->
+                <div class="bg-slate-900/70 rounded-2xl p-3 border border-slate-800">
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-bold text-slate-200"><i class="fas fa-history text-emerald-400 mr-1.5"></i>History Log</h3>
+                        <div class="flex bg-slate-800 rounded-lg p-0.5 border border-slate-700">
+                            <button onclick="setHistoryScope('month')" id="scopeMonth" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-blue-600 text-white">Month</button>
+                            <button onclick="setHistoryScope('year')" id="scopeYear" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold text-slate-400">Year</button>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-1 mb-2 overflow-x-auto no-scrollbar">
+                        <button onclick="setHistoryFilter('all')" id="flt-all" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-slate-900 shrink-0">All</button>
+                        <button onclick="setHistoryFilter('1')" id="flt-1" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-emerald-400 border border-slate-700 shrink-0">✓ Taken</button>
+                        <button onclick="setHistoryFilter('2')" id="flt-2" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-red-400 border border-slate-700 shrink-0">✕ Skipped</button>
+                        <button onclick="setHistoryFilter('0')" id="flt-0" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 shrink-0">— Unknown</button>
+                    </div>
+
+                    <div id="historyCounts" class="text-[10px] text-slate-400 mb-1.5 flex justify-between px-1"></div>
+
+                    <div id="historyList" class="divide-y divide-slate-800/80 max-h-64 overflow-y-auto pr-0.5">
+                        <!-- Ultra-compact rows -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Summary Modal -->
+    <div id="dailyModal" class="fixed inset-0 bg-black/80 hidden z-50 items-end justify-center">
+        <div class="glass w-full max-w-md rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+                <div>
+                    <h2 class="text-sm font-bold text-white">Daily Report</h2>
+                    <p id="dailyTotalText" class="text-xs font-bold text-emerald-400">Total: ₹0</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="date" id="dailyDatePicker" onchange="renderDailySummary()" class="bg-slate-800 text-white text-xs px-2 py-1 rounded-lg border border-slate-700 outline-none">
+                    <button onclick="closeModal('dailyModal')" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center"><i class="fas fa-times text-xs"></i></button>
+                </div>
+            </div>
+            <div id="dailyList" class="overflow-y-auto p-3 space-y-1.5"></div>
+        </div>
+    </div>
+
+    <!-- Add / Edit Item Modal -->
+    <div id="itemFormModal" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-3">
+        <div class="glass w-full max-w-sm rounded-3xl p-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-3">
+                <h2 id="itemFormTitle" class="text-sm font-bold text-white">Add New Tracker</h2>
+                <button onclick="closeModal('itemFormModal')" class="text-slate-400"><i class="fas fa-times"></i></button>
+            </div>
+            <input type="hidden" id="editItemId">
+            <div class="space-y-2.5">
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-0.5">Item Name</label>
+                    <input type="text" id="fName" placeholder="e.g. Milk, Petrol, Whey Protein" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-0.5">Category</label>
+                        <select id="fCategory" class="w-full bg-slate-800 text-white text-xs px-2.5 py-2 rounded-xl border border-slate-700 outline-none">
+                            <option value="Food">Food</option>
+                            <option value="Transport">Transport</option>
+                            <option value="Groceries">Groceries</option>
+                            <option value="Bills">Bills</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-0.5">Unit (L, kg, Dzn, Tiffin)</label>
+                        <input type="text" id="fUnit" placeholder="L / kg / Dzn" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-0.5">Default Rate (₹)</label>
+                        <input type="number" step="any" id="fPrice" placeholder="60" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-400 block mb-0.5">Default Qty (e.g. 0.5, 1, 2)</label>
+                        <input type="number" step="any" id="fQty" placeholder="1" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                    </div>
+                </div>
             
-            if (next === 0) {
-                delete records[currentDate][itemId];
-            } else {
-                records[currentDate][itemId] = { state: next, price: item.price, qty: item.qty };
-            }
-            saveData();
-            renderApp();
-        }
-
-        function calculateDashboards() {
-            let t = 0, m = 0, y = 0;
-            const [cYear, cMonth] = currentDate.split('-');
-            
-            for (const [date, dayData] of Object.entries(records)) {
-                let dayTotal = 0;
-                for (const itemId in dayData) {
-                    if (dayData[itemId].state === 1) {
-                        dayTotal += dayData[itemId].price * dayData[itemId].qty;
-                    }
-                }
-                if (date === currentDate) t += dayTotal;
-                if (date.startsWith(`${cYear}-${cMonth}`)) m += dayTotal;
-                if (date.startsWith(cYear)) y += dayTotal;
-            }
-            
-            document.getElementById('dashToday').innerText = `₹${t}`;
-            document.getElementById('dashMonth').innerText = `₹${m}`;
-            document.getElementById('dashYear').innerText = `₹${y}`;
-        }
-
-        function openHistory(itemId) {
-            currentHistoryItem = items.find(i => i.id === itemId);
-            document.getElementById('modalTitle').innerText = currentHistoryItem.name + ' History';
-            document.getElementById('historyModal').classList.remove('hidden');
-            document.getElementById('historyModal').classList.add('flex');
-            setHistoryTab('month');
-        }
-
-        function setHistoryTab(tab) {
-            historyTab = tab;
-            document.getElementById('tabMonth').className = `flex-1 py-1 rounded-md text-sm font-bold ${tab === 'month' ? 'bg-blue-600 text-white' : 'text-slate-400'}`;
-            document.getElementById('tabYear').className = `flex-1 py-1 rounded-md text-sm font-bold ${tab === 'year' ? 'bg-blue-600 text-white' : 'text-slate-400'}`;
-            
-            const list = document.getElementById('historyList');
-            list.innerHTML = '';
-            
-            const [cYear, cMonth] = currentDate.split('-');
-            const prefix = tab === 'month' ? `${cYear}-${cMonth}` : `${cYear}`;
-            
-            let html = '';
-            // Generate list from records
-            Object.keys(records).sort().reverse().forEach(date => {
-                if (date.startsWith(prefix)) {
-                    const data = records[date][currentHistoryItem.id];
-                    if (data && data.state !== 0) {
-                        let isTaken = data.state === 1;
-                        html += `
-                            <div class="flex justify-between items-center bg-slate-800 p-3 rounded-xl border border-slate-700">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full flex items-center justify-center ${isTaken ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}">
-                                        <i class="fas ${isTaken ? 'fa-check' : 'fa-times'}"></i>
-                                    </div>
-                                    <div class="font-bold text-sm">${new Date(date).toLocaleDateString('en-GB', {day:'numeric', month:'short'})}</div>
-                                </div>
-                                <div class="text-right">
-                                    ${isTaken ? `<div class="font-bold text-sm">₹${data.price * data.qty}</div>
-                                    <div class="text-xs text-slate-400">${data.qty} ${currentHistoryItem.unit} @ ₹${data.price}</div>` : 
-                                    `<div class="text-xs text-red-400 font-bold">Skipped</div>`}
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-            });
-            
-            if (!html) html = '<div class="text-center text-slate-500 py-4">No records found.</div>';
-            list.innerHTML = html;
-        }
-
-        function openSettings() {
-            document.getElementById('settingsModal').classList.remove('hidden');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-            if (id === 'historyModal') document.getElementById('historyModal').classList.remove('flex');
-        }
-
-        function saveData() {
-            localStorage.setItem('tracker_records', JSON.stringify(records));
-        }
-
-        function downloadBackup() {
-            const data = JSON.stringify({ items, records });
-            const blob = new Blob([data], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Tracker_Backup_${currentDate}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function restoreBackup(event) {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (data.records) {
-                            records = data.records;
-                            saveData();
-                            renderApp();
-                            closeModal('settingsModal');
-                            alert("Data Restored Successfully!");
-                        }
-                    } catch (err) {
-                        alert("Invalid Backup File");
-                    }
-                };
-                reader.readAsText(file);
-            }
-        }
-
-        // Init
-        renderApp();
-    </script>
-</body>
-              </html>
-  
