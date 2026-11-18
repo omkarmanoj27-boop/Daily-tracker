@@ -4,11 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="theme-color" content="#0f172a">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Daily Tracker Pro</title>
-    <link rel="manifest" href="manifest.json">
-    <link rel="icon" type="image/svg+xml" href="icon.svg">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -46,7 +42,7 @@
                 </div>
             </div>
 
-            <!-- Date Picker + Quick Nav -->
+            <!-- Date Picker -->
             <div class="flex items-center gap-1.5 mb-2.5">
                 <button onclick="shiftDate(-1)" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center border border-slate-700 active:scale-95">
                     <i class="fas fa-chevron-left text-xs"></i>
@@ -86,14 +82,10 @@
             <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"><i class="fas fa-times-circle"></i></button>
         </div>
 
-        <div id="categoryTabs" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2.5">
-            <!-- Rendered via JS -->
-        </div>
+        <div id="categoryTabs" class="flex gap-1.5 overflow-x-auto no-scrollbar pb-2.5"></div>
 
-        <!-- Compact 2-Column Items Grid -->
-        <div id="itemsGrid" class="grid grid-cols-2 gap-2.5">
-            <!-- Rendered via JS -->
-        </div>
+        <!-- Items Grid -->
+        <div id="itemsGrid" class="grid grid-cols-2 gap-2.5"></div>
     </div>
 
     <!-- Floating Add Button -->
@@ -101,10 +93,9 @@
         <i class="fas fa-plus"></i>
     </button>
 
-    <!-- Item Detail / Calendar / History Modal -->
+    <!-- Detail Modal -->
     <div id="detailModal" class="fixed inset-0 bg-black/80 hidden z-50 items-end justify-center">
         <div class="glass w-full max-w-md rounded-t-3xl max-h-[92vh] flex flex-col overflow-hidden">
-            <!-- Modal Header -->
             <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
                 <div class="flex items-center gap-2.5 min-w-0">
                     <div id="detailIconBox" class="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0"></div>
@@ -114,15 +105,13 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
-                    <button onclick="editCurrentItem()" class="w-8 h-8 rounded-lg bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700" title="Edit Item"><i class="fas fa-pen text-xs"></i></button>
-                    <button onclick="downloadCSV(currentDetailId)" class="w-8 h-8 rounded-lg bg-slate-800 text-emerald-400 flex items-center justify-center border border-slate-700" title="Item CSV"><i class="fas fa-download text-xs"></i></button>
+                    <button onclick="editCurrentItem()" class="w-8 h-8 rounded-lg bg-slate-800 text-blue-400 flex items-center justify-center border border-slate-700"><i class="fas fa-pen text-xs"></i></button>
+                    <button onclick="downloadCSV(currentDetailId)" class="w-8 h-8 rounded-lg bg-slate-800 text-emerald-400 flex items-center justify-center border border-slate-700"><i class="fas fa-download text-xs"></i></button>
                     <button onclick="closeModal('detailModal')" class="w-8 h-8 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center border border-slate-700"><i class="fas fa-times text-xs"></i></button>
                 </div>
             </div>
 
-            <!-- Modal Body -->
             <div class="overflow-y-auto px-3.5 py-3 space-y-3">
-                <!-- Month & Year Item Stats -->
                 <div class="grid grid-cols-2 gap-2">
                     <div class="bg-slate-800/70 rounded-xl p-2.5 border border-slate-700/60">
                         <div class="text-[10px] text-slate-400 font-semibold uppercase" id="statMonthLabel">This Month</div>
@@ -140,25 +129,22 @@
                     </div>
                 </div>
 
-                <!-- Interactive Calendar -->
+                <!-- Calendar -->
                 <div class="bg-slate-900/70 rounded-2xl p-2.5 border border-slate-800">
                     <div class="flex items-center justify-between mb-2">
                         <button onclick="changeCalMonth(-1)" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center"><i class="fas fa-chevron-left text-[11px]"></i></button>
-                        <div id="calMonthTitle" class="text-xs font-bold text-white">November 2026</div>
+                        <div id="calMonthTitle" class="text-xs font-bold text-white">Month Year</div>
                         <button onclick="changeCalMonth(1)" class="w-7 h-7 rounded-lg bg-slate-800 text-slate-300 flex items-center justify-center"><i class="fas fa-chevron-right text-[11px]"></i></button>
                     </div>
                     <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-400 font-semibold mb-1">
                         <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
                     </div>
                     <div id="calendarGrid" class="grid grid-cols-7 gap-1"></div>
-                    <p class="text-[10px] text-slate-500 text-center mt-1.5">Tap any date: Green (Taken) → Red (Skipped) → Blank (Unknown)</p>
                 </div>
 
-                <!-- Manual Entry & Dynamic Price Update -->
+                <!-- Manual Entry Form -->
                 <div class="bg-slate-900/70 rounded-2xl p-3 border border-slate-800">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-xs font-bold text-slate-200"><i class="fas fa-sliders-h text-blue-400 mr-1.5"></i>Custom Entry / Rate Update</h3>
-                    </div>
+                    <h3 class="text-xs font-bold text-slate-200 mb-2"><i class="fas fa-sliders-h text-blue-400 mr-1.5"></i>Custom Entry / Rate Update</h3>
                     <div class="grid grid-cols-2 gap-2 mb-2">
                         <div>
                             <label class="text-[10px] text-slate-400 block mb-0.5">Date</label>
@@ -169,7 +155,7 @@
                             <select id="manState" class="w-full bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 outline-none">
                                 <option value="1">✓ Taken</option>
                                 <option value="2">✕ Skipped</option>
-                                <option value="0">— Clear / Unknown</option>
+                                <option value="0">— Clear</option>
                             </select>
                         </div>
                         <div>
@@ -181,17 +167,15 @@
                             <input type="number" step="any" id="manQty" class="w-full bg-slate-800 text-white text-xs px-2 py-1.5 rounded-lg border border-slate-700 outline-none">
                         </div>
                     </div>
-                    <input type="text" id="manNote" placeholder="Payment / Note (optional, e.g. Paid UPI)" class="w-full bg-slate-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 outline-none mb-2">
+                    <input type="text" id="manNote" placeholder="Note (optional)" class="w-full bg-slate-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 outline-none mb-2">
                     <label class="flex items-center gap-2 text-[11px] text-slate-300 mb-2.5 cursor-pointer">
                         <input type="checkbox" id="manUpdateDefault" class="rounded bg-slate-800 border-slate-600 accent-blue-500">
-                        <span>Save this rate as new default for future</span>
+                        <span>Save as new default rate</span>
                     </label>
-                    <button onclick="saveManualEntry()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-xl active:scale-98">
-                        Save Entry
-                    </button>
+                    <button onclick="saveManualEntry()" class="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2 rounded-xl">Save Entry</button>
                 </div>
 
-                <!-- Dense History List (Month & Year + Filters) -->
+                <!-- History Log -->
                 <div class="bg-slate-900/70 rounded-2xl p-3 border border-slate-800">
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="text-xs font-bold text-slate-200"><i class="fas fa-history text-emerald-400 mr-1.5"></i>History Log</h3>
@@ -200,19 +184,8 @@
                             <button onclick="setHistoryScope('year')" id="scopeYear" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold text-slate-400">Year</button>
                         </div>
                     </div>
-
-                    <div class="flex gap-1 mb-2 overflow-x-auto no-scrollbar">
-                        <button onclick="setHistoryFilter('all')" id="flt-all" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white text-slate-900 shrink-0">All</button>
-                        <button onclick="setHistoryFilter('1')" id="flt-1" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-emerald-400 border border-slate-700 shrink-0">✓ Taken</button>
-                        <button onclick="setHistoryFilter('2')" id="flt-2" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-red-400 border border-slate-700 shrink-0">✕ Skipped</button>
-                        <button onclick="setHistoryFilter('0')" id="flt-0" class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700 shrink-0">— Unknown</button>
-                    </div>
-
                     <div id="historyCounts" class="text-[10px] text-slate-400 mb-1.5 flex justify-between px-1"></div>
-
-                    <div id="historyList" class="divide-y divide-slate-800/80 max-h-64 overflow-y-auto pr-0.5">
-                        <!-- Ultra-compact rows -->
-                    </div>
+                    <div id="historyList" class="divide-y divide-slate-800/80 max-h-60 overflow-y-auto"></div>
                 </div>
             </div>
         </div>
@@ -235,7 +208,7 @@
         </div>
     </div>
 
-    <!-- Add / Edit Item Modal -->
+    <!-- Add/Edit Item Modal -->
     <div id="itemFormModal" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-3">
         <div class="glass w-full max-w-sm rounded-3xl p-4 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-3">
@@ -246,7 +219,7 @@
             <div class="space-y-2.5">
                 <div>
                     <label class="text-[11px] text-slate-400 block mb-0.5">Item Name</label>
-                    <input type="text" id="fName" placeholder="e.g. Milk, Petrol, Whey Protein" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                    <input type="text" id="fName" placeholder="e.g. Milk, Petrol" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -260,18 +233,44 @@
                         </select>
                     </div>
                     <div>
-                        <label class="text-[11px] text-slate-400 block mb-0.5">Unit (L, kg, Dzn, Tiffin)</label>
-                        <input type="text" id="fUnit" placeholder="L / kg / Dzn" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                        <label class="text-[11px] text-slate-400 block mb-0.5">Unit</label>
+                        <input type="text" id="fUnit" placeholder="L / kg / Tiffin" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="text-[11px] text-slate-400 block mb-0.5">Default Rate (₹)</label>
-                        <input type="number" step="any" id="fPrice" placeholder="60" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                        <input type="number" step="any" id="fPrice" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
                     </div>
                     <div>
-                        <label class="text-[11px] text-slate-400 block mb-0.5">Default Qty (e.g. 0.5, 1, 2)</label>
-                        <input type="number" step="any" id="fQty" placeholder="1" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
+                        <label class="text-[11px] text-slate-400 block mb-0.5">Default Qty</label>
+                        <input type="number" step="any" id="fQty" class="w-full bg-slate-800 text-white text-xs px-3 py-2 rounded-xl border border-slate-700 outline-none">
                     </div>
                 </div>
-            
+                <div>
+                    <label class="text-[11px] text-slate-400 block mb-1">Choose Icon</label>
+                    <div id="iconPicker" class="grid grid-cols-6 gap-1.5"></div>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button id="deleteItemBtn" onclick="deleteCurrentItem()" class="hidden px-3 py-2 rounded-xl bg-red-600/20 text-red-400 border border-red-500/30 text-xs font-bold"><i class="fas fa-trash"></i></button>
+                    <button onclick="saveItemForm()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 rounded-xl">Save Tracker</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 hidden z-50 items-center justify-center p-4">
+        <div class="glass w-full max-w-sm rounded-3xl p-5 relative">
+            <button onclick="closeModal('settingsModal')" class="absolute top-4 right-4 text-slate-400"><i class="fas fa-times"></i></button>
+            <h2 class="text-sm font-bold text-white mb-4"><i class="fas fa-shield-alt text-blue-400 mr-2"></i>Data & Backup</h2>
+            <div class="space-y-2.5">
+                <button onclick="downloadCSV()" class="w-full bg-emerald-600 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2">
+                    <i class="fas fa-file-excel"></i> Download Statement (CSV)
+                </button>
+                <button onclick="downloadBackup()" class="w-full bg-blue-600 text-white text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2">
+                    <i class="fas fa-download"></i> Download Full Backup (.json)
+                </button>
+                <label class="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+                    <i class="fas fa-upload text-blue-400"></i> Restore Backup (.json)
+        
